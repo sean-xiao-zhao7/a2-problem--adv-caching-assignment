@@ -1,31 +1,49 @@
+var box = document.querySelector(".box");
+var button = document.querySelector("button");
 
-var box = document.querySelector('.box');
-var button = document.querySelector('button');
-
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker
-    .register('/sw.js')
-    .then(function() {
-      console.log('Registered Service Worker!');
+if ("serviceWorker" in navigator) {
+    navigator.serviceWorker.register("/sw.js").then(function () {
+        console.log("Registered Service Worker!");
     });
 }
 
-button.addEventListener('click', function(event) {
-  if (box.classList.contains('visible')) {
-    box.classList.remove('visible');
-  } else {
-    box.classList.add('visible');
-  }
+button.addEventListener("click", function (event) {
+    if (box.classList.contains("visible")) {
+        box.classList.remove("visible");
+    } else {
+        box.classList.add("visible");
+    }
 });
 
-fetch('https://httpbin.org/ip')
-  .then(function(res) {
-    return res.json();
-  })
-  .then(function(data) {
-    console.log(data.origin);
-    box.style.height = (data.origin.substr(0, 2) * 5) + 'px';
-  });
+const cardUrl = "https://httpbin.org/ip";
+let finished = false;
+
+fetch(cardUrl)
+    .then(function (res) {
+        return res.json();
+    })
+    .then(function (data) {
+        if (!finished) {
+            finished = true;
+            box.style.height = data.origin.substr(0, 2) * 5 + "px";
+        }
+    });
+
+if ("caches" in window) {
+    caches
+        .match(cardUrl)
+        .then((res) => {
+            if (res) {
+                return res.json();
+            }
+        })
+        .then((data) => {
+            if (!finished) {
+                finished = true;
+                box.style.height = data.origin.substr(0, 2) * 5 + "px";
+            }
+        });
+}
 
 // 1) Identify the strategy we currently use in the Service Worker (for caching)
 // 2) Replace it with a "Network only" strategy => Clear Storage (in Dev Tools), reload & try using your app offline
